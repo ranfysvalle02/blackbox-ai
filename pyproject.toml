@@ -1,0 +1,121 @@
+[project]
+name = "blackbox-ai"
+version = "0.1.0"
+description = "Blackbox AI: a native pass-through LLM proxy that captures polymorphic coding-intent telemetry into MongoDB, out-of-band and fail-open."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "httpx>=0.28",
+    # PyMongo native async (AsyncMongoClient). Motor is deprecated (EOL 2026-05-14);
+    # PyMongo's async API is the officially recommended replacement (stable since 4.13).
+    # The [encryption] extra pulls in pymongocrypt for Queryable Encryption.
+    "pymongo[encryption]>=4.13",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.7",
+    "structlog>=24.4",
+    "orjson>=3.10",
+    # Prometheus client for the /metrics exposition endpoint.
+    "prometheus-client>=0.21",
+    # Voyage AI (a MongoDB company) embeddings for Atlas Vector Search.
+    "voyageai>=0.3",
+]
+
+[project.optional-dependencies]
+# Native vendor SDKs, only needed to run examples/demo.py against the gateway.
+examples = [
+    "openai>=1.50",
+    "anthropic>=0.40",
+    "google-genai>=1.0",
+    "ollama>=0.4",
+]
+
+[project.scripts]
+blackbox-ai = "blackbox_ai.__main__:main"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "respx>=0.22",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/blackbox_ai"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "C4",   # flake8-comprehensions
+    "SIM",  # flake8-simplify
+    "TID",  # flake8-tidy-imports
+    "RUF",  # ruff-specific
+    "BLE",  # flake8-blind-except (forbids bare/blind except)
+    "ASYNC",# flake8-async
+]
+ignore = [
+    "B008",  # FastAPI dependency-injection idiom uses callables in defaults.
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+# Third-party libs without complete type stubs.
+module = ["ollama.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# voyageai ships partial typing that trips no_implicit_reexport and unions its
+# embedding return type; treat it as untyped at the boundary.
+module = ["voyageai", "voyageai.*"]
+follow_imports = "skip"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "integration: tests that require a live MongoDB instance (deselect with -m 'not integration')",
+]
+addopts = "-ra"
+
+[tool.coverage.run]
+source = ["src/blackbox_ai"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+# Ratchet set ~5 points below the unit-test baseline (79%). Integration-only
+# paths (CLI, lifespan wiring, QE bootstrap) are exercised by `-m integration`.
+fail_under = 74
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "\\.\\.\\.",
+    "if __name__ == .__main__.:",
+]

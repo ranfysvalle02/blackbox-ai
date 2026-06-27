@@ -1,0 +1,46 @@
+services:
+  mongodb:
+    # Local MongoDB Atlas image: a single-node replica set that also speaks
+    # Atlas Search / Vector Search, so Phase-4 features work without the cloud.
+    image: mongodb/mongodb-atlas-local:8.3
+    container_name: blackbox-ai-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - "db.adminCommand('ping').ok"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: blackbox-ai
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      # Reach Mongo by service name on the compose network.
+      GATEWAY_MONGO_URI: mongodb://mongodb:27017/?directConnection=true
+      GATEWAY_LOG_JSON: "true"
+    env_file:
+      # Provider keys + overrides. Queryable Encryption is ON by default, so the
+      # gateway needs GATEWAY_ENCRYPTION_KEY here (run `make gen-key` first) or it
+      # fails closed; set GATEWAY_ENCRYPTION_ENABLED=false for a plaintext run.
+      - path: .env
+        required: false
+    restart: unless-stopped
+
+volumes:
+  mongo-data:

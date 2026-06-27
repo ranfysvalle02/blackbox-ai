@@ -1,0 +1,4 @@
+data: {"candidates":[{"content":{"parts":[{"text":"Hel"}],"role":"model"}}],"modelVersion":"gemini-2.0-flash"}
+
+data: {"candidates":[{"content":{"parts":[{"text":"lo"}],"role":"model"},"finishReason":"STOP"}],"modelVersion":"gemini-2.0-flash","usageMetadata":{"promptTokenCount":7,"candidatesTokenCount":2,"totalTokenCount":9}}
+

@@ -1,0 +1,13 @@
+{
+  "id": "chatcmpl-3",
+  "object": "chat.completion",
+  "model": "gpt-4o-mini",
+  "choices": [
+    {
+      "index": 0,
+      "message": { "role": "assistant", "content": "The answer is 42." },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": { "prompt_tokens": 15, "completion_tokens": 6, "total_tokens": 21 }
+}
