@@ -1,5 +1,8 @@
 # ghosts-in-the-code
 
+[![CI](https://github.com/ranfysvalle02/ghosts-in-the-code/actions/workflows/ci.yml/badge.svg)](https://github.com/ranfysvalle02/ghosts-in-the-code/actions/workflows/ci.yml)
+[![Security Policy](https://img.shields.io/badge/security-policy-blue.svg)](./SECURITY.md)
+
 ---
 
 # The Ghost in the Codebase: Managing the "Intent Trap" in the Age of AI Development
